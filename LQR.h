@@ -8,6 +8,10 @@
 #if !defined (LQR_H)
 #define LQR_H
 
+#define	N_state 10
+#define	N_input 2
+#define	N_output 2
+
 
 #include "Level0.h"
 #include "Level1.h"
@@ -23,9 +27,6 @@ class LQR {
 
 //OBJECT_DLL_STUFF(IPID)
 private:
-	float N_state;
-	float N_input;
-	float N_output;
 	
 	float *x_dot_pos;
 	float *x_pos;
