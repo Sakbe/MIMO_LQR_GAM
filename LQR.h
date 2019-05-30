@@ -53,10 +53,11 @@ public:
 
 
 		
-	//LQR ();
+	LQR ();
 	float* MIMO_CONTROL_POSITIVE(float R_ref, float Z_ref, float R_real, float Z_real, float I_vertical, float I_horizontal);
 	bool MIMO_CONTROL_NEGATIVE(float R_ref, float Z_ref, float R_real, float Z_real, float I_vertical, float I_horizontal);
 	Kalman KALMAN_FILTER(float R_real, float Z_real, float I_vertical, float I_horizontal,int sign);
+	int nothing();
 	
 	~LQR();
 

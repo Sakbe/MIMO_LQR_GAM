@@ -15,7 +15,7 @@ LQR::LQR(){
 	this-> N_state = 10;
 	this-> N_input = 2;
 	this-> N_output = 2;
-	this-> x_dot_pos(float[this->N_state]) = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	this-> x_dot_pos[this->N_state] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	this-> x_pos(float[this->N_state]) = {0.0983539734804260, 0.480564466137287, -0.204246862173158, 0.0605647026605041, -0.369796209977501, 0.111380460346364, 0.0194246756583234, 0.144179620264490, -0.0534417070457820, 0.215640033094750}; 
 	this-> K_LQR_pos(float[this-> N_input * this->N_state]) = {-88.5447855580499, 72.5449707404182, 299.919285932049, 97.3986210388653, -126.922485598113, -19.2782249920040, -72.3603047217459, -35.5046768020497, -23.4791895209002, 34.4552016998678,
 											    47.4794910727297, -62.4889455506822, -139.015357704676, -5.27359167725381, 55.1119649348921, 73.2619061481024, 64.3020177469677, 40.0122247290657, 12.5025905939338, -48.7322901014367};
@@ -122,10 +122,14 @@ Kalman LQR:: KALMAN_FILTER(float R_real, float Z_real, float I_vertical, float I
 	//if we use this in mimo class we can comment from 102 to 115
 	//i putted because we can copy this in IPID class
 	float temp;
+	int j=0;
+	int i=0;
+	Kalman Outputs={0.085,0.085};
+	if(sign == 1){
 	
 	for(j = 0; j < this->N_state; j++){
 		for (i = 0; i < this->N_state; i++) {
-			this->x_dot_pos[j] = this->A_est_pos[i + j*(this->N_state-1)] * x_pos[i];
+			this->x_dot_pos[j] = this->x_dot_pos[j]+this->A_est_pos[i + j*(this->N_state-1)] * x_pos[i];
 		}
 	}
 	for(i = 0; i < this->N_state; i++){
@@ -143,31 +147,40 @@ Kalman LQR:: KALMAN_FILTER(float R_real, float Z_real, float I_vertical, float I
 	//[y_est x_est] = C_est x_est + D_est [u_real y_real]
 	for(j = 0; j < this->N_output; j++){
 		for (i = 0; i < this->N_state; i++) {
-			this->y_est[j] = this->C_est_pos[i + j*(this->N_output-1)] * x_pos[i];
+			this->y_est[j] = this->y_est[j] + this->C_est_pos[i + j*(this->N_output-1)] * this->x_pos[i];
 		}}
 	for (i = 0; i < this->N_output; i++) {
-		this->y_est[i] = this->D_est_pos[24 + i] * I_vertical + this->D_est_pos[36 + i] * I_horizontal;
+		this->y_est[i] = this->y_est[i] + this->D_est_pos[24 + i] * I_vertical + this->D_est_pos[36 + i] * I_horizontal;
 	}
-	//x_est
+	/*//x_est
 	for(j = this->N_output; j < this->N_output + this->N_state; j++){
 		for (i = 0; i < this->N_state; i++) {
-			this->x_est[j] = this->C_est_pos[i + j*(this->N_output-1)] * x_pos[i];
+			this->x_est[j] = this->x_est[j] + this->C_est_pos[i + j*(this->N_output-1)] * x_pos[i];
 		}}
 	//x_est = D*u
 	//float I_vertical, float I_horizontal
 	for (i = 0; i < this->N_state; i++) {
-		this->x_pos[i] = this->D_est_pos[26 + i] * I_vertical + this->D_est_pos[38 + i] * I_horizontal;
-	}
+		this->x_pos[i] = this->x_pos[i] + this->D_est_pos[26 + i] * I_vertical + this->D_est_pos[38 + i] * I_horizontal;
+	}*/
 	
 		//x(k)=x(k+1) for the next step
 	for (i = 0; i < this->N_state; i++) {
 		this->x_pos[i] = this->x_dot_pos[i];
 	}
+				Outputs.Kalman_R=y_est[0];
+				Outputs.Kalman_R=y_est[1];
+		}
+		
+		else{
 	
+				Outputs.Kalman_R=0.085;
+				Outputs.Kalman_Z=0.085;}
 	
-	Kalman Outputs={0.085,0.085};
-	 Outputs.Kalman_R=y_est[0];
-	 Outputs.Kalman_R=y_est[1];
+
 	return Outputs;
 	
 }
+
+int LQR:: nothing() {
+	return 1;
+	}

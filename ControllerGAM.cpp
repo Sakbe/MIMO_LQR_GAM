@@ -609,6 +609,9 @@ bool ControllerGAM::Initialise(ConfigurationDataBase& cdbData){
 	
 	this->Kalman_LQR_var = new LQR();
 	
+	this->CentroidPos.Kalman_R=0;
+	this->CentroidPos.Kalman_Z=0;
+	
 
 	puffing_duration_in_puffing_feedback_in_us = int(puffing_duration_in_puffing_feedback_in_ms * 1000);
 	maximum_idle_time_in_puffing_feedback_in_us = int(maximum_idle_time_in_puffing_feedback_in_ms * 1000);
@@ -643,6 +646,19 @@ bool ControllerGAM::Execute(GAM_FunctionNumbers functionNumber){
 		
 	OutputInterfaceStruct *outputstruct = (OutputInterfaceStruct *) this->SignalsOutputInterface->Buffer();
 
+/////// Kalman Filtering ///////
+
+
+if ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750) && (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750)) {
+	
+	//this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER(inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent, 1);
+	
+} else{
+	int a = 0;
+	//a= this->Kalman_LQR_var->nothing();
+	}
+
+/////////////////////////////////////////////////////
 /* **** WaveformModes of operation *****
 	0 -> off  
 	1 -> current control

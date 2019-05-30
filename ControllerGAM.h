@@ -61,6 +61,10 @@ private:
 	IPID *vertical_position_PID;
 	IPID *primary_plasma_current_PID;
 
+	LQR *Kalman_LQR_var;
+	Kalman CentroidPos;
+	
+	
 	int horizontal_lookuptable_size;
 	int vertical_lookuptable_size;
 	int primary_lookuptable_size;
