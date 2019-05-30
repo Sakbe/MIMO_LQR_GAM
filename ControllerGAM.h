@@ -60,8 +60,6 @@ private:
 	IPID *horizontal_position_PID;
 	IPID *vertical_position_PID;
 	IPID *primary_plasma_current_PID;
-	
-	LQR *Kalman_LQR_var;
 
 	int horizontal_lookuptable_size;
 	int vertical_lookuptable_size;
@@ -141,7 +139,11 @@ private:
 	float PID_primary_derivative_soft;
 	float PID_primary_derivative_normal;
 	float PID_primary_derivative_hard;
+	
 
+	// stuff for MIMO control
+	float *MIMO_outputs;
+	
 	bool view_input_variables;
 	
 	int puffing_mode;

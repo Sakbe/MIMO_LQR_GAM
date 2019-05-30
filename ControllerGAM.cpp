@@ -599,15 +599,17 @@ bool ControllerGAM::Initialise(ConfigurationDataBase& cdbData){
 	temp_file.Close();
 	
 	this->PID_time_constant = usecthread_cycle_time / 1000000;
+	this->PID_time_constant=0.0001;
  
-	this->horizontal_position_PID = new IPID(this->PID_horizontal_proportional_normal, this->PID_horizontal_integral_normal, this->PID_horizontal_derivative_normal,this->usecthread_cycle_time, this->maximum_vertical_current, this->minimum_vertical_current );
-	this->vertical_position_PID = new IPID(this->PID_vertical_proportional_normal, this->PID_vertical_integral_normal, this->PID_vertical_derivative_normal,this->usecthread_cycle_time, this->maximum_horizontal_current, this->minimum_horizontal_current);
-	this->primary_plasma_current_PID = new IPID(this->PID_primary_proportional_normal, this->PID_primary_integral_normal, this->PID_primary_derivative_normal,this->usecthread_cycle_time, this->maximum_primary_current, this->minimum_primary_current );
+	this->horizontal_position_PID = new IPID(this->PID_horizontal_proportional_normal, this->PID_horizontal_integral_normal, this->PID_horizontal_derivative_normal,this->PID_time_constant, this->maximum_vertical_current, this->minimum_vertical_current );
+	this->vertical_position_PID = new IPID(this->PID_vertical_proportional_normal, this->PID_vertical_integral_normal, this->PID_vertical_derivative_normal,this->PID_time_constant, this->maximum_horizontal_current, this->minimum_horizontal_current);
+	this->primary_plasma_current_PID = new IPID(this->PID_primary_proportional_normal, this->PID_primary_integral_normal, this->PID_primary_derivative_normal,this->PID_time_constant, this->maximum_primary_current, this->minimum_primary_current );
 
 	// Chamar construtor do  LQR
 	
 	this->Kalman_LQR_var = new LQR();
 	
+
 	puffing_duration_in_puffing_feedback_in_us = int(puffing_duration_in_puffing_feedback_in_ms * 1000);
 	maximum_idle_time_in_puffing_feedback_in_us = int(maximum_idle_time_in_puffing_feedback_in_ms * 1000);
 	minimum_idle_time_in_puffing_feedback_in_us =int(minimum_idle_time_in_puffing_feedback_in_ms * 1000);
@@ -683,6 +685,8 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 			
 			
 			if (inputstruct[0].PrimaryWaveformMode == 7 || inputstruct[0].HorizontalWaveformMode == 7 || inputstruct[0].VerticalWaveformMode == 7){
+				
+				float temp;
 								
 				outputstruct[0].SendToPrimaryValue = inputstruct[0].PrimaryCurrent;
 				outputstruct[0].SendToVerticalValue = inputstruct[0].VerticalCurrent;
@@ -691,6 +695,12 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 				old_PrimaryWaveformMode = 7;
 				old_VerticalWaveformMode = 7;
 				old_HorizontalWaveformMode = 7;
+				
+				// bumpless condition to -1
+				 temp =	 this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),2,-1);
+				temp =	 this->vertical_position_PID->CalculatePID_hor(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),2,-1);
+	
+				
 			}
 				
 			else if (inputstruct[0].PrimaryWaveformMode == 6 || inputstruct[0].HorizontalWaveformMode == 6 || inputstruct[0].VerticalWaveformMode == 6){
@@ -879,10 +889,12 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 					if(old_VerticalWaveformMode > 5 || old_VerticalWaveformMode < 2 ) this->horizontal_position_PID->LoadOldOutputWithinLimits((inputstruct[0].VerticalCurrent));
 					
 					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750) {
-						outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID((2 *(inputstruct[0].VerticalOutputWaveform/1000) - inputstruct[0].PositionR),(inputstruct[0].VerticalOutputWaveform/1000));
+						
+						//outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID((2 *(inputstruct[0].VerticalOutputWaveform/1000) - inputstruct[0].PositionR),(inputstruct[0].VerticalOutputWaveform/1000));
+						outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),2,0);
 					}
 					if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750) {
-						outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000));
+						outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),1,0);
 					}
 					// else: keep the output (no changes)
 	
@@ -895,10 +907,12 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 					if(old_HorizontalWaveformMode > 5 || old_HorizontalWaveformMode < 2 ) this->vertical_position_PID->LoadOldOutputWithinLimits(inputstruct[0].HorizontalCurrent);
 					
 					if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750) {
-						outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_types((2 * inputstruct[0].HorizontalOutputWaveform/1000 - inputstruct[0].PositionZ), inputstruct[0].HorizontalOutputWaveform/1000, 1);
+						
+						//outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID((2 * inputstruct[0].HorizontalOutputWaveform/1000 - inputstruct[0].PositionZ), inputstruct[0].HorizontalOutputWaveform/1000);
+						outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_hor( inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000,2,0);
 					}
 					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750) {
-						outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_types(inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000, 1);
+						outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_hor(inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000,1,0);
 					}
 					// else: keep the output (no changes)
 	
