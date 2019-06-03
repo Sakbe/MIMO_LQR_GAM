@@ -20,7 +20,8 @@
 
 	struct Kalman{
 		float Kalman_R;
-		float Kalman_Z;	}  ;
+		float Kalman_Z;
+	/*	float *X_est;*/}  ;
 		
 /** MIMO CONTROLLER */
 class LQR {

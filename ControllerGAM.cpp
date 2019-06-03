@@ -707,8 +707,8 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 /////////////////////////// Kalman Filtering //////////////////////////
 
 
-if ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750) ) {
-	//|| (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750)
+if ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750)|| (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750) ) {
+	//
 	
 	if(this->changeDetec == 0){
 		int ivo;

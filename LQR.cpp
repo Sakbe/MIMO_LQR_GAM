@@ -146,7 +146,7 @@ Kalman LQR:: KALMAN_FILTER(float R_real, float Z_real, float I_vertical, float I
 		for(j = 0; j < N_state; j++){
 			buff = 0.0;
 			for (i = 0; i < N_state; i++) {
-				m=i + j*(N_state-1);
+				m=i + j*(N_state);
 				buff = buff + this->A_est_pos[m] * this->x_pos[i];
 			}
 			this->x_dot_pos[j] = buff;
@@ -172,19 +172,28 @@ Kalman LQR:: KALMAN_FILTER(float R_real, float Z_real, float I_vertical, float I
 		for(j = 0; j < N_output; j++){
 			buff = 0.0;
 			for (i = 0; i < N_state; i++) {
-				m=i + j*(N_output-1);
+				m=i + j*(N_state);
 				 buff += this->C_est_pos[m] * this->x_pos[i];
 			}
 			y_est[j] = buff;
 		}
-		buff = 0.0;
 		
-		for (i = 0; i < N_output; i++) {
-			m=24 + i;
-			n=36 + i;
-			buff =  this->D_est_pos[m] * I_vertical + this->D_est_pos[n] * I_horizontal;
-			y_est[j] += buff;
-		}
+		
+		//for (i = 0; i < N_output; i++) {
+			//m=24 + i;
+			//n=36 + i;
+			//buff =  this->D_est_pos[m] * R_real + this->D_est_pos[m+1] * Z_real;
+			//y_est[i] += buff;
+			//buff = 0.0;
+		//}
+
+			buff =  this->D_est_pos[24] * R_real + this->D_est_pos[25] * Z_real;
+			y_est[0] += buff;
+			buff = 0.0;
+			buff =  this->D_est_pos[36] * R_real + this->D_est_pos[37] * Z_real;
+			y_est[1] += buff;
+			buff = 0.0;
+		
 		/*//x_est
 		for(j = this->N_output; j < this->N_output + this->N_state; j++){
 			for (i = 0; i < this->N_state; i++) {
