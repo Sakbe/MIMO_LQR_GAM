@@ -66,6 +66,8 @@ private:
 
 	LQR *Kalman_LQR_var;
 	Kalman CentroidPos;
+	LQRouputs LQRcurrents;
+	
 	float Radial_pos;
 	float Vertical_pos;
 	float IVertical;

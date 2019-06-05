@@ -58,7 +58,7 @@ LQR::LQR(){
 																			0.0837226767933073, -0.201930464264813, 0.932065758525171, 0.882254761320045, 0.823346631120921, 1.03206071769100, 1.09155104677677, 0.434307167651101, 0.898729664509743, 0.336036710307567, 0.530958079293443, 0.422170361983903,
 																			-0.201930464264813, 0.581221747348804, -2.40253906173113, -2.63736312680753, -2.12922174119470, -2.36012581017436, -2.66345378002374, -1.76397174672629, -1.04091890922158, -1.15888747773842, -1.78456363151675, -1.44184795296202};
 	this-> N_BAR_pos = (float[N_input +  N_output]){-10742.3892431170, 2232.81721981446, -2083.47963304734, 748.358330278337};
-	this-> error_pos =(float[N_output]) {0, 0};
+
 
 	this-> x_neg=(float[N_state])  {-0.0494766508450061, -0.111034664506845, 0.0242441680811973, 0.00586343293525677, -0.00854660070320271, 0.000970048477408260, -0.000888992834197872, 0.00166157894650906, 0.000997825822154208, 0.00231148829292225};
 	this-> x_dot_neg=(float[N_state])  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -96,8 +96,7 @@ LQR::LQR(){
 																		  0.792748001070510, 0.127200492028566, -1.89986323015272, -0.875378185180234, -0.448488414111140, -0.855933161747806, -0.551306520752944, -0.525229532468674, -0.546922069627300, -0.388126656171121, -0.181883164704487, -0.376686561697634,
 																		  0.127200492028566, 0.649838802214520, 1.26326480026836, -0.101299827329797, -0.00775356577001699, 0.0343497717108373, -0.0729949361324825, -0.250330990815615, -0.181624658268750, -0.258525806346280, -0.456209422157503, -0.278086171487326};
 	this-> N_BAR_neg=(float[N_input +  N_output]) {10952.4708669408, -15383.1557900097, 472.748420082415, -11646.5031736039};
-	this-> error_neg=(float[N_output]) {0, 0};
-	
+
 
 	
 }
@@ -105,52 +104,94 @@ LQR::LQR(){
 LQR::~LQR(){
 }
 
-float*  LQR::MIMO_CONTROL_POSITIVE(float R_ref, float Z_ref, float R_real, float Z_real, float I_vertical, float I_horizontal){
-	float u_vertical = 0;
-	float u_horizontal = 0;
+//////////////////////////// Controllers /////////////////////////////////////////////////////////
+
+
+LQRouputs  LQR::MIMO_CONTROL_POSITIVE(float R_ref, float Z_ref, float R_real, float Z_real, float I_vertical, float I_horizontal){
+	float u_Nbar_0 = 0;
+	float u_Nbar_1 = 0;
+	float u_vertical=0;
+	float u_horizontal=0;
 	int i = 0;
 	int j = 0;
 	float temp = 0.0;
 	float *outputs;
 	outputs =(float[2]) {0, 0};
-	this->error_pos[0] = R_ref - R_real;
-	this->error_pos[1] = Z_ref - Z_real;
+	LQRouputs Outputs={0,0};
+	
+	
+	
 	//Nbar(4x4)*error(2x1)
-	u_vertical = (this->error_pos[0] * this->N_BAR_pos[0]) + (this->error_pos[0] * this->N_BAR_pos[2]);
-	u_horizontal = (this->error_pos[1] * this->N_BAR_pos[1]) + (this->error_pos[1] * this->N_BAR_pos[3]);
+	u_Nbar_0 = (R_ref* this->N_BAR_pos[0]) + (Z_ref* this->N_BAR_pos[1]);
+	u_Nbar_1 = (R_ref * this->N_BAR_pos[2]) + (Z_ref * this->N_BAR_pos[3]);
 	
 	//u=u-k_lqr*x
 	for (i = 0; i < N_state; i++) {
-		temp = this->x_pos[i] * this->K_LQR_pos[i];
-		u_vertical = u_vertical - temp;
-		temp = 0;		
-	}
-	for (i = 0; i < N_state; i++) {
-		temp = this->x_pos[i] * this->K_LQR_pos[i+N_state];
-		u_horizontal = u_horizontal - temp;
-		temp = 0;		
-	}
-	
-	//x(k+1)=Ax(k)
-	for(j = 0; j < N_state; j++){
-		for (i = 0; i < N_state; i++) {
-			this->x_dot_pos[j] = this->A_est_pos[i + j*(N_state-1)] * this->x_pos[i];
+		temp += this->x_pos[i] * this->K_LQR_pos[i];
 		}
-	}
-	//B_est_pos =[vertical; horizonal; rc; zc]
-	for(i = 0; i < N_state; i++){
-		temp =  this->B_est_pos[i] * I_vertical + this->B_est_pos[ i + (N_state)] * I_horizontal + this->B_est_pos[ i + 2*(N_state)] * R_real + this->B_est_pos[ i + 3*(N_state)] * Z_real;
-		this->x_dot_pos[i] = this->x_dot_pos[i] + temp;
-		temp = 0;
-	}
-	//x(k)=x(k+1) for the next step
+	u_vertical = u_Nbar_0 - temp;
+	temp = 0;		
+	
 	for (i = 0; i < N_state; i++) {
-		this->x_pos[i] = this->x_dot_pos[i];
+		temp += this->x_pos[i] * this->K_LQR_pos[i+N_state];
+		
 	}
-	outputs[0] = u_vertical;
-	outputs[1] = u_horizontal;
-	return outputs;
+	u_horizontal = u_Nbar_1 - temp;
+	temp = 0;
+	
+	Outputs.Ivert = u_vertical;
+	Outputs.Ihor = u_horizontal;
+	
+	return Outputs;
 }
+
+
+LQRouputs  LQR::MIMO_CONTROL_NEGATIVE(float R_ref, float Z_ref, float R_real, float Z_real, float I_vertical, float I_horizontal){
+	float u_Nbar_0 = 0;
+	float u_Nbar_1 = 0;
+	float u_vertical=0;
+	float u_horizontal=0;
+	int i = 0;
+	int j = 0;
+	float temp = 0.0;
+	float *outputs;
+	outputs =(float[2]) {0, 0};
+	LQRouputs Outputs={0,0};
+	
+	
+	
+	//Nbar(4x4)*error(2x1)
+	u_Nbar_0 = (R_ref* this->N_BAR_neg[0]) + (Z_ref* this->N_BAR_neg[1]);
+	u_Nbar_1 = (R_ref * this->N_BAR_neg[2]) + (Z_ref * this->N_BAR_neg[3]);
+	
+	//u=u-k_lqr*x
+	for (i = 0; i < N_state; i++) {
+		temp += this->x_neg[i] * this->K_LQR_neg[i];	
+	}
+	u_vertical = u_Nbar_0 - temp;
+	temp = 0.0;	
+	
+	for (i = 0; i < N_state; i++) {
+		temp += this->x_neg[i] * this->K_LQR_neg[i+N_state];
+		
+	}
+	u_horizontal = u_Nbar_1 - temp;
+		temp = 0;
+		
+	Outputs.Ivert = u_vertical;
+	Outputs.Ihor = u_horizontal;
+	
+	return Outputs;
+}
+
+
+
+
+///////////////////////////////////////////// KALMAN FILTERS////////////////////////////////////////////////////////
+
+
+
+
 
 Kalman LQR:: KALMAN_FILTER_POS(float R_real, float Z_real, float I_vertical, float I_horizontal, int sign){
 	//the same as before

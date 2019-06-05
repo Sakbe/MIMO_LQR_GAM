@@ -614,6 +614,8 @@ bool ControllerGAM::Initialise(ConfigurationDataBase& cdbData){
 	this->CentroidPos.Kalman_R=0;
 	this->CentroidPos.Kalman_Z=0;
 	this->CentroidPos.X_est=(float[10]){0, 0,0,0,0,0,0,0,0,0};
+	this->LQRcurrents.Ivert=0.0;
+	this->LQRcurrents.Ihor=0.0;
 	
 	this-> Radial_pos=0;
 	this-> Vertical_pos=0;
