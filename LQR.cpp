@@ -207,24 +207,7 @@ Kalman LQR:: KALMAN_FILTER_POS(float R_real, float Z_real, float I_vertical, flo
 			y_est[j] = buff;
 		}
 		
-			for(j = N_output; j <N_output+N_state ; j++){
-			buff = 0.0;
-			for (i = 0; i < N_state; i++) {
-				m=i + j*(N_state);
-				 buff += this->C_est_pos[m] * this->x_pos[i];
-			}
-			X_est[j-N_output] = buff;
-		}	
-		
-		
-		
-		//for (i = 0; i < N_output; i++) {
-			//m=24 + i;
-			//n=36 + i;
-			//buff =  this->D_est_pos[m] * R_real + this->D_est_pos[m+1] * Z_real;
-			//y_est[i] += buff;
-			//buff = 0.0;
-		//}
+	
 
 			buff =  this->D_est_pos[24] * R_real + this->D_est_pos[36] * Z_real;
 			y_est[0] += buff;
@@ -234,36 +217,22 @@ Kalman LQR:: KALMAN_FILTER_POS(float R_real, float Z_real, float I_vertical, flo
 			buff = 0.0;
 			
 			
-		for (i = N_output; i < N_output+N_state; i++) {
-			m=24 + i;
-			n=36 + i;
-			buff =  this->D_est_pos[m] * R_real + this->D_est_pos[n] * Z_real;
-			X_est[i-N_output] += buff;
-			buff = 0.0;
-		}	
+
 		
-		
-		/*//x_est
-		for(j = this->N_output; j < this->N_output + this->N_state; j++){
-			for (i = 0; i < this->N_state; i++) {
-				this->x_est[j] = this->x_est[j] + this->C_est_pos[i + j*(this->N_output-1)] * x_pos[i];
-			}}
-		//x_est = D*u
-		//float I_vertical, float I_horizontal
-		for (i = 0; i < this->N_state; i++) {
-			this->x_pos[i] = this->x_pos[i] + this->D_est_pos[26 + i] * I_vertical + this->D_est_pos[38 + i] * I_horizontal;
-		}*/
+
 		
 			//x(k)=x(k+1) for the next step
+
+		
+		Outputs.Kalman_R= y_est[0];
+		Outputs.Kalman_Z= y_est[1];
+		Outputs.X_est= this-> x_pos;
+		
 		buffer = 0.0;
 		for (i = 0; i < N_state; i++) {
 			buffer =this->x_dot_pos[i];
 			this->x_pos[i]=buffer;
 		}
-		
-		Outputs.Kalman_R= y_est[0] ;
-		Outputs.Kalman_Z= y_est[1];
-		Outputs.X_est=X_est;
 		
 		}else{
 			Outputs.Kalman_R= 0.085;
@@ -320,11 +289,7 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 			
 		}
 		temp = 0.0;
-		
-		//x^(k+1) = A_est * x(k)+ B_est * u(k)
-		//i need also to copy her C_est and D_est to have y^(k) that we can compare with the real y
-		
-		//float* x_est;
+
 		
 		
 		//[y_est x_est] = C_est x_est + D_est [u_real y_real]
@@ -337,14 +302,7 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 			y_est[j] = buff;
 		}
 		
-		for(j = N_output; j <N_output+N_state ; j++){
-			buff = 0.0;
-			for (i = 0; i < N_state; i++) {
-				m=i + j*(N_state);
-				 buff += this->C_est_neg[m] * this->x_neg[i];
-			}
-			X_est[j-N_output] = buff;
-		}
+
 
 			buff =  this->D_est_neg[24] * R_real + this->D_est_neg[36] * Z_real;
 			y_est[0] += buff;
@@ -354,23 +312,20 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 			buff = 0.0;
 		
 			
-		for (i = N_output; i < N_output+N_state; i++) {
-			m=24 + i;
-			n=36 + i;
-			buff =  this->D_est_neg[m] * R_real + this->D_est_neg[n] * Z_real;
-			X_est[i-N_output] += buff;
-			buff = 0.0;
-		}
+
 		
 			//x(k)=x(k+1) for the next step
+
+		
+		Outputs.Kalman_R= y_est[0];
+		Outputs.Kalman_Z= y_est[1];
+		Outputs.X_est=this->x_neg;
+		
 		buffer = 0.0;
 		for (i = 0; i < N_state; i++) {
 			buffer =this->x_dot_neg[i];
 			this->x_neg[i]=buffer;
 		}
-		
-		Outputs.Kalman_R= y_est[0] ;
-		Outputs.Kalman_Z= y_est[1];
 		
 		}else{
 			Outputs.Kalman_R= 0.085;
