@@ -51,7 +51,7 @@ private:
 	float *D_est_neg;
 	float *N_BAR_neg;
 	
-	
+	float *X_LQR;
 
      
 public:	

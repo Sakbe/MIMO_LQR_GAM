@@ -760,7 +760,8 @@ if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
 		
 		if (inputstruct[0].DischargeStatus >=0 ){
 			
-			
+
+						
 			if (inputstruct[0].PrimaryWaveformMode == 7 || inputstruct[0].HorizontalWaveformMode == 7 || inputstruct[0].VerticalWaveformMode == 7){
 				
 				float temp;
@@ -810,7 +811,9 @@ if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
 				old_VerticalWaveformMode = 6;
 				old_HorizontalWaveformMode = 6;
 			}
-			else {
+			else { //// the big else
+				
+
 				if (inputstruct[0].PrimaryWaveformMode == 5){
 					
 					// decide wich PID to use based on the current error
@@ -959,55 +962,97 @@ if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
 	
 					old_PrimaryWaveformMode = 2;
 				}
-	 			if (inputstruct[0].VerticalWaveformMode == 2){
-
-					if(old_VerticalWaveformMode != 2) this->horizontal_position_PID->SetPIDConstants(this->PID_vertical_proportional_soft, this->PID_vertical_integral_soft, this->PID_vertical_derivative_soft, this->usecthread_cycle_time);
 				
-					if(old_VerticalWaveformMode > 5 || old_VerticalWaveformMode < 2 ) this->horizontal_position_PID->LoadOldOutputWithinLimits((inputstruct[0].VerticalCurrent));
-					
-					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 850) {
+				///////////////////// LQR
+				if (inputstruct[0].VerticalWaveformMode == 8 && inputstruct[0].HorizontalWaveformMode == 8){		
+                       /// Positive current
+					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 850) {	
+						//this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE(inputstruct[0].VerticalOutputWaveform/1000, inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
+						this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE((inputstruct[0].VerticalOutputWaveform/1000)-0.005, inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
 						
-						//outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID((2 *(inputstruct[0].VerticalOutputWaveform/1000) - inputstruct[0].PositionR),(inputstruct[0].VerticalOutputWaveform/1000));
-						outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),2,0);
-					}
+						outputstruct[0].SendToVerticalValue = this->LQRcurrents.Ivert;
+						outputstruct[0].SendToHorizontalValue =this->LQRcurrents.Ihor;
+
+						
+											}
+					     /// Negative current
 					if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -850) {
-						outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),1,0);
-					}
-					// else: keep the output (no changes)
-	
-					old_VerticalWaveformMode = 2;
-				}
-				if (inputstruct[0].HorizontalWaveformMode == 2){
-
-					if(old_HorizontalWaveformMode != 2) this->vertical_position_PID->SetPIDConstants(this->PID_horizontal_proportional_soft, this->PID_horizontal_integral_soft, this->PID_horizontal_derivative_soft, this->usecthread_cycle_time);
-
-					if(old_HorizontalWaveformMode > 5 || old_HorizontalWaveformMode < 2 ) this->vertical_position_PID->LoadOldOutputWithinLimits(inputstruct[0].HorizontalCurrent);
-					
-					if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -900) {
+						this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_NEGATIVE((inputstruct[0].VerticalOutputWaveform/1000)-0.005, inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
 						
-						//outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID((2 * inputstruct[0].HorizontalOutputWaveform/1000 - inputstruct[0].PositionZ), inputstruct[0].HorizontalOutputWaveform/1000);
-						outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_hor( inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000,2,0);
-					}
-					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 900) {
-						outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_hor(inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000,1,0);
+						outputstruct[0].SendToVerticalValue =this->LQRcurrents.Ivert;
+						outputstruct[0].SendToHorizontalValue =this->LQRcurrents.Ihor;
+				
+						
 					}
 					// else: keep the output (no changes)
-	
-					old_HorizontalWaveformMode = 2;
+					//// Limitações
+						
+						if ( outputstruct[0].SendToVerticalValue > this->maximum_vertical_current ) outputstruct[0].SendToVerticalValue = this->maximum_vertical_current;
+						if ( outputstruct[0].SendToVerticalValue < this->minimum_vertical_current ) outputstruct[0].SendToVerticalValue = this->minimum_vertical_current;
+						if ( outputstruct[0].SendToHorizontalValue > this->maximum_horizontal_current ) outputstruct[0].SendToHorizontalValue = this->maximum_horizontal_current;
+						if ( outputstruct[0].SendToHorizontalValue < this->minimum_horizontal_current ) outputstruct[0].SendToHorizontalValue = this->minimum_horizontal_current;
+						
+					old_VerticalWaveformMode = 8;
+					old_HorizontalWaveformMode = 8;
 				}
+				
+				/////////////// This else is in case someone is selecting MIMO just for one of the currents (Vertical or Horizontal) .. PID will be execute for both
+	 			else {
+					if (inputstruct[0].VerticalWaveformMode == 2 || inputstruct[0].VerticalWaveformMode == 8){
+
+						if(old_VerticalWaveformMode != 2) this->horizontal_position_PID->SetPIDConstants(this->PID_vertical_proportional_soft, this->PID_vertical_integral_soft, this->PID_vertical_derivative_soft, this->usecthread_cycle_time);
+					
+						if(old_VerticalWaveformMode > 5 || old_VerticalWaveformMode < 2 ) this->horizontal_position_PID->LoadOldOutputWithinLimits((inputstruct[0].VerticalCurrent));
+						
+						if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 850) {
+							
+							//outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID((2 *(inputstruct[0].VerticalOutputWaveform/1000) - inputstruct[0].PositionR),(inputstruct[0].VerticalOutputWaveform/1000));
+							outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),2,0);
+						}
+						if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -850) {
+							outputstruct[0].SendToVerticalValue = this->horizontal_position_PID->CalculatePID_vert(inputstruct[0].PositionR,(inputstruct[0].VerticalOutputWaveform/1000),1,0);
+						}
+						// else: keep the output (no changes)
+		
+						old_VerticalWaveformMode = 2;
+					}
+					if (inputstruct[0].HorizontalWaveformMode == 2 || inputstruct[0].HorizontalWaveformMode == 8){
+
+						if(old_HorizontalWaveformMode != 2) this->vertical_position_PID->SetPIDConstants(this->PID_horizontal_proportional_soft, this->PID_horizontal_integral_soft, this->PID_horizontal_derivative_soft, this->usecthread_cycle_time);
+
+						if(old_HorizontalWaveformMode > 5 || old_HorizontalWaveformMode < 2 ) this->vertical_position_PID->LoadOldOutputWithinLimits(inputstruct[0].HorizontalCurrent);
+						
+						if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -900) {
+							
+							//outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID((2 * inputstruct[0].HorizontalOutputWaveform/1000 - inputstruct[0].PositionZ), inputstruct[0].HorizontalOutputWaveform/1000);
+							outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_hor( inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000,2,0);
+						}
+						if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 900) {
+							outputstruct[0].SendToHorizontalValue = this->vertical_position_PID->CalculatePID_hor(inputstruct[0].PositionZ, inputstruct[0].HorizontalOutputWaveform/1000,1,0);
+						}
+						// else: keep the output (no changes)
+		
+						old_HorizontalWaveformMode = 2;
+					}
+				}
+				
+
+				
+				
+				/////////// Current control
 				if (inputstruct[0].PrimaryWaveformMode == 1 || inputstruct[0].PrimaryWaveformMode == 8){
 					
 					outputstruct[0].SendToPrimaryValue = inputstruct[0].PrimaryOutputWaveform;
 					
 					old_PrimaryWaveformMode = 1;
 				}
-				if (inputstruct[0].VerticalWaveformMode == 1 || inputstruct[0].VerticalWaveformMode == 8){
+				if (inputstruct[0].VerticalWaveformMode == 1 ){
 				
 					outputstruct[0].SendToVerticalValue = inputstruct[0].VerticalOutputWaveform;
 					
 					old_VerticalWaveformMode = 1;
 				}
-				if (inputstruct[0].HorizontalWaveformMode == 1 || inputstruct[0].HorizontalWaveformMode == 8){
+				if (inputstruct[0].HorizontalWaveformMode == 1 ){
 					
 					outputstruct[0].SendToHorizontalValue = inputstruct[0].HorizontalOutputWaveform;
 					
