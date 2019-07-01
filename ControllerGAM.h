@@ -72,6 +72,8 @@ private:
 	float Vertical_pos;
 	float IVertical;
 	float IHorizontal;
+	float SendToVer_buff;
+	float SendToHor_buff;
 	int changeDetec;
 	
 	int horizontal_lookuptable_size;
