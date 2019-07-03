@@ -621,6 +621,8 @@ bool ControllerGAM::Initialise(ConfigurationDataBase& cdbData){
 	this-> Vertical_pos=0;
 	this-> IVertical=0;
 	this-> IHorizontal=0;
+	this-> SendToVer_buff=0;
+	this-> SendToHor_buff=0;
 	this-> changeDetec=0;
 
 	puffing_duration_in_puffing_feedback_in_us = int(puffing_duration_in_puffing_feedback_in_ms * 1000);
