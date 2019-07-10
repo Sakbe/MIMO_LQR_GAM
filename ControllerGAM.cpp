@@ -708,56 +708,7 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 	if(functionNumber == GAMOnline){
 		
 		
-		
-/////////////////////////// Kalman Filtering //////////////////////////
-
-
-if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
-	//
 	
-	if(this->changeDetec == 0){
-		int ivo;
-		ivo = this->Kalman_LQR_var->erase();
-		this->changeDetec =1;
-		}
-	
-	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_POS(Radial_pos, Vertical_pos, IVertical, IHorizontal, 1);
-	
-	//this->CentroidPos.Kalman_R=0.05;
-	//this->CentroidPos.Kalman_Z=0.05;
-
-
-
-} else if ( inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750)  {
-	//
-	
-	if(this->changeDetec == 0){
-		int ivo;
-		ivo = this->Kalman_LQR_var->erase();
-		this->changeDetec =1;
-		}
-	
-	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(Radial_pos, Vertical_pos, IVertical, IHorizontal, 1);
-	
-	//this->CentroidPos.Kalman_R=0.05;
-	//this->CentroidPos.Kalman_Z=0.05;
-
-
-
-} 
-	else{
-		this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(0, 0, 0, 0, 0);
-		this->changeDetec =0;
-	}
-	
-		outputstruct[0].R_recons=this->CentroidPos.Kalman_R;
-		outputstruct[0].Z_recons=this->CentroidPos.Kalman_Z;
-
-		
-		
-		
-		
-///////////////////////////////////////////////////////////////////////////////		
 
 		
 		if (inputstruct[0].DischargeStatus >=0 ){
@@ -1149,6 +1100,54 @@ if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
 		outputstruct[0].SendToToroidal = (float) inputstruct[0].ToroidalOutputWaveform;
 	}	
 		
+		
+/////////////////////////// Kalman Filtering //////////////////////////
+
+
+if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
+	//
+	
+	if(this->changeDetec == 0){
+		int ivo;
+		ivo = this->Kalman_LQR_var->erase();
+		this->changeDetec =1;
+		}
+	
+	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_POS(Radial_pos, Vertical_pos, IVertical, IHorizontal, 1);
+	
+	//this->CentroidPos.Kalman_R=0.05;
+	//this->CentroidPos.Kalman_Z=0.05;
+
+
+
+} else if ( inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750)  {
+	//
+	
+	if(this->changeDetec == 0){
+		int ivo;
+		ivo = this->Kalman_LQR_var->erase();
+		this->changeDetec =1;
+		}
+	
+	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(Radial_pos, Vertical_pos, IVertical, IHorizontal, 1);
+	
+	//this->CentroidPos.Kalman_R=0.05;
+	//this->CentroidPos.Kalman_Z=0.05;
+
+
+
+} 
+	else{
+		this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(0, 0, 0, 0, 0);
+		this->changeDetec =0;
+	}
+	
+		outputstruct[0].R_recons=this->CentroidPos.Kalman_R;
+		outputstruct[0].Z_recons=this->CentroidPos.Kalman_Z;
+								
+///////////////////////////////////////////////////////////////////////////////	
+	
+	
 	
 	old_DischargeStatus = inputstruct[0].DischargeStatus;
 
