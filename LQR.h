@@ -41,6 +41,7 @@ private:
 	float *C_est_pos;
 	float *D_est_pos;
 	float *N_BAR_pos;
+	float *C_inv_pos;
 	
 	float *x_dot_neg;
 	float *x_neg;
@@ -50,8 +51,11 @@ private:
 	float *C_est_neg;
 	float *D_est_neg;
 	float *N_BAR_neg;
+	float *C_inv_neg;
 	
 	float *X_LQR;
+	float *X_LQR_pos;
+	float *X_LQR_neg;
 
      
 public:	
@@ -63,7 +67,7 @@ public:
 	LQRouputs MIMO_CONTROL_NEGATIVE(float R_ref, float Z_ref, float R_real, float Z_real, float I_vertical, float I_horizontal);
 	Kalman KALMAN_FILTER_POS(float R_real, float Z_real, float I_vertical, float I_horizontal,int sign);
 	Kalman KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, float I_horizontal,int sign);
-	int erase();
+	int erase(float R_real, float Z_real);
 	
 	~LQR();
 

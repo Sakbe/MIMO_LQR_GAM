@@ -75,6 +75,7 @@ private:
 	float SendToVer_buff;
 	float SendToHor_buff;
 	int changeDetec;
+	int firstcycle;
 	
 	int horizontal_lookuptable_size;
 	int vertical_lookuptable_size;

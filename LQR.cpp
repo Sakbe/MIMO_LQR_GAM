@@ -17,6 +17,9 @@ LQR::LQR(){
 	//this-> N_output = 2;
 
 	this-> X_LQR = (float[N_state]){0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	this-> X_LQR_pos = (float[N_state]){0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	this-> X_LQR_neg = (float[N_state]){0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 
 	this-> x_dot_pos = (float[N_state]){0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -67,7 +70,7 @@ this->C_inv_pos=(float[N_state*N_output]){-0.1128326,	-1.6521053,
 					-0.0313703,	0.0087999,
 				-	0.0130463,	-0.0006182};
 
-	
+
 this-> D_est_pos=(float[(N_state + N_output) * (N_input + N_output)]) {0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
 0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
 0.933653057,	-0.006654531,	-0.002363925,	3.719087601,	-4.928617477,	-9.176921844,	7.084938049,	8.307642937,	-36.456493378,	9.628709793,	3.044416189,	9.574270248,
@@ -121,6 +124,7 @@ this-> C_est_neg=(float[N_state * (N_state +  N_output)]) {0.11705617,	0.026252,
 -0.71258372,	1.4324522,	0.08286439,	0.00389678,	0.0005565,	0.00379861,	0.01300376,	0.00143606,	0.99628222,	-0.02108169,
 3.45656371,	0.01250112,	-0.14113656,	-0.00903223,	0.00162519,	-0.01099296,	-0.00167956,	-0.01694678,	-0.00673327,	1.02027333};
 
+
 this->C_inv_neg=(float[N_state*N_output]){0.1402455,	4.7841462,
 					4.376472,	-2.0959448,
 					0.1582349,	-0.2745241,
@@ -130,8 +134,7 @@ this->C_inv_neg=(float[N_state*N_output]){0.1402455,	4.7841462,
 					0.0385296,	-0.0209643,
 					-0.006962,	-0.0204256,
 					-0.015843,	-0.0018004,
-					-0.0507191,	0.0529503};
-	
+					-0.0507191,	0.0529503};	
 
 this-> D_est_neg=(float[(N_state + N_output) * (N_input + N_output)]){0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
 0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
@@ -185,13 +188,13 @@ LQRouputs  LQR::MIMO_CONTROL_POSITIVE(float R_ref, float Z_ref, float R_real, fl
 	
 	//u=u-k_lqr*x
 	for (i = 0; i < N_state; i++) {
-		temp += this->X_LQR[i] * this->K_LQR_pos[i];
+		temp += this->X_LQR_pos[i] * this->K_LQR_pos[i];
 		}
 	u_vertical = u_Nbar_0 - temp;
 	temp = 0;		
 	
 	for (i = 0; i < N_state; i++) {
-		temp += this->X_LQR[i] * this->K_LQR_pos[i+N_state];
+		temp += this->X_LQR_pos[i] * this->K_LQR_pos[i+N_state];
 		
 	}
 	u_horizontal = u_Nbar_1 - temp;
@@ -224,13 +227,13 @@ LQRouputs  LQR::MIMO_CONTROL_NEGATIVE(float R_ref, float Z_ref, float R_real, fl
 	
 	//u=u-k_lqr*x
 	for (i = 0; i < N_state; i++) {
-		temp += this->X_LQR[i] * this->K_LQR_neg[i];	
+		temp += this->X_LQR_neg[i] * this->K_LQR_neg[i];	
 	}
 	u_vertical = u_Nbar_0 - temp;
 	temp = 0.0;	
 	
 	for (i = 0; i < N_state; i++) {
-		temp += this->X_LQR[i] * this->K_LQR_neg[i+N_state];
+		temp += this->X_LQR_neg[i] * this->K_LQR_neg[i+N_state];
 		
 	}
 	u_horizontal = u_Nbar_1 - temp;
@@ -274,10 +277,7 @@ Kalman LQR:: KALMAN_FILTER_POS(float R_real, float Z_real, float I_vertical, flo
 	
 	Kalman Outputs={0.085,0.085,X_est};
 	
-	for(i=0; i< N_state; i++){
-		buff = this->x_pos[i];
-		this->X_LQR[i] = buff;
-	}
+
 	buff=0.0;	
 			
 	if(sign == 1){	
@@ -340,6 +340,11 @@ Kalman LQR:: KALMAN_FILTER_POS(float R_real, float Z_real, float I_vertical, flo
 			this->x_pos[i]=buffer;
 		}
 		
+			for(i=0; i< N_state; i++){
+		buff = this->x_pos[i];
+		this->X_LQR_pos[i] = buff;
+	}
+		
 		}else{
 			Outputs.Kalman_R= 0.085;
 			Outputs.Kalman_Z= 0.085;
@@ -375,10 +380,7 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 	X_est =(float[10]){0, 0,0,0,0,0,0,0,0,0};
 	Kalman Outputs={0.085,0.085,X_est};
 	
-	for(i=0; i< N_state; i++){
-		buff = this->x_neg[i];
-		this->X_LQR[i] = buff;;
-	}
+
 	buff=0.0;	
 	if(sign == 1){	
 		
@@ -422,7 +424,7 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 			y_est[1] += buff;
 			buff = 0.0;
 		
-			
+
 
 		
 			//x(k)=x(k+1) for the next step
@@ -438,6 +440,11 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 			this->x_neg[i]=buffer;
 		}
 		
+				for(i=0; i< N_state; i++){
+				buff = this->x_neg[i];
+				this->X_LQR_neg[i] = buff;
+				}
+		
 		}else{
 			Outputs.Kalman_R= 0.085;
 			Outputs.Kalman_Z= 0.085;
@@ -451,7 +458,7 @@ Kalman LQR:: KALMAN_FILTER_NEG(float R_real, float Z_real, float I_vertical, flo
 	return Outputs;
 	
 }
-int LQR:: erase() {
+int LQR:: erase(float R_real, float Z_real) {
 	int i = 0;
 	float* state0_pos;
 	float* state0_neg;
@@ -464,13 +471,21 @@ int LQR:: erase() {
 	for (i = 0; i < N_state; i++) {
 			this->x_dot_neg[i]=0.0;
 		}
+	//for (i = 0; i < N_state; i++) {
+			//this->x_pos[i]=state0_pos[i];
+		//}
+	//for (i = 0; i < N_state; i++) {
+			//this->x_neg[i]=state0_neg[i];
+		//}
 	for (i = 0; i < N_state; i++) {
-			this->x_pos[i]=state0_pos[i];
+			this->x_pos[i]=this->C_inv_pos[N_output*i]*R_real + this->C_inv_pos[1+N_output*i]*Z_real;
+			this->X_LQR_pos[i]=this->C_inv_pos[N_output*i]*R_real + this->C_inv_pos[1+N_output*i]*Z_real;
 		}
 	for (i = 0; i < N_state; i++) {
-			this->x_neg[i]=state0_neg[i];
-		}
+		this->x_neg[i]=this->C_inv_neg[N_output*i]*R_real + this->C_inv_neg[1+N_output*i]*Z_real;
+		this->X_LQR_neg[i]=this->C_inv_neg[N_output*i]*R_real + this->C_inv_neg[1+N_output*i]*Z_real;
 
+		}		
 	
 	return 1;
 	}

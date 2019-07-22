@@ -622,6 +622,7 @@ bool ControllerGAM::Initialise(ConfigurationDataBase& cdbData){
 	this-> IVertical=0;
 	this-> IHorizontal=0;
 	this-> changeDetec=0;
+	this-> firstcycle=0;
 	this-> SendToVer_buff=0;
 	this-> SendToHor_buff=0;
 	
@@ -712,6 +713,23 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 		
 		if (inputstruct[0].DischargeStatus >=0 ){
 			
+
+//////// Get initial conditions
+
+if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
+	if(this->firstcycle== 0){
+			int ivo;
+			ivo = this->Kalman_LQR_var->erase(Radial_pos, Vertical_pos);
+	        this->firstcycle =1;}
+	}		
+else if ( inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750){
+	if(this->firstcycle== 0){
+			int ivo;
+			ivo = this->Kalman_LQR_var->erase(Radial_pos, Vertical_pos);
+	        this->firstcycle =1;}
+	}	else{this->firstcycle =0;}
+	
+	//////////////////////////////////////
 
 						
 			if (inputstruct[0].PrimaryWaveformMode == 7 || inputstruct[0].HorizontalWaveformMode == 7 || inputstruct[0].VerticalWaveformMode == 7){
@@ -915,14 +933,16 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 					old_PrimaryWaveformMode = 2;
 				}
 				
-				///////////////////// LQR
+				
+				///////////////////// LQR  /////////////////////////////////////////////
+				
 				if (inputstruct[0].VerticalWaveformMode == 8 && inputstruct[0].HorizontalWaveformMode == 8){		
                        /// Positive current
-					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 1200) {	
+					if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 950) {	
 						//this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE(inputstruct[0].VerticalOutputWaveform/1000, inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
-						//this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE((inputstruct[0].VerticalOutputWaveform/1000),inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
+						this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE((inputstruct[0].VerticalOutputWaveform/1000),inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
 
-						this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE((inputstruct[0].VerticalOutputWaveform/1000),inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, SendToVer_buff, SendToHor_buff);
+						//this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_POSITIVE((inputstruct[0].VerticalOutputWaveform/1000),inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, SendToVer_buff, SendToHor_buff);
 						
 						this->SendToVer_buff = this->LQRcurrents.Ivert;
 						this->SendToHor_buff =this->LQRcurrents.Ihor;
@@ -930,10 +950,10 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 						
 											}
 					     /// Negative current
-					if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -1200) {
-						//this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_NEGATIVE((inputstruct[0].VerticalOutputWaveform/1000), inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
+					if (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -950) {
+						this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_NEGATIVE((inputstruct[0].VerticalOutputWaveform/1000), inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent);
 
-						this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_NEGATIVE((inputstruct[0].VerticalOutputWaveform/1000), inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, SendToVer_buff, SendToHor_buff);
+						//this-> LQRcurrents= this->Kalman_LQR_var->MIMO_CONTROL_NEGATIVE((inputstruct[0].VerticalOutputWaveform/1000), inputstruct[0].HorizontalOutputWaveform/1000, inputstruct[0].PositionR, inputstruct[0].PositionZ, SendToVer_buff, SendToHor_buff);
 						
 						this->SendToVer_buff =this->LQRcurrents.Ivert;
 						this->SendToHor_buff =this->LQRcurrents.Ihor;
@@ -1064,13 +1084,13 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 							puffing_feedback_currently_off = False;
 						}
 
-						if (puffing_feedback_mode == 1 && ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750) || (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750))){  // feedback in density
+						if (puffing_feedback_mode == 1 && ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 950) || (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750))){  // feedback in density
 							if ( inputstruct[0].PuffingOutputWaveform < inputstruct[0].Density) puffing_feedback_usectime_to_change = puffing_feedback_usectime_to_change + puffing_feedback_usec_change_per_cycle;
 							if ( inputstruct[0].PuffingOutputWaveform > inputstruct[0].Density) puffing_feedback_usectime_to_change = puffing_feedback_usectime_to_change - puffing_feedback_usec_change_per_cycle;
 							if ( puffing_feedback_usectime_to_change > maximum_idle_time_in_puffing_feedback_in_us ) puffing_feedback_usectime_to_change = maximum_idle_time_in_puffing_feedback_in_us;
 							if ( puffing_feedback_usectime_to_change < minimum_idle_time_in_puffing_feedback_in_us ) puffing_feedback_usectime_to_change = minimum_idle_time_in_puffing_feedback_in_us;
 						} 
-						if(puffing_feedback_mode == 2 && ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750) || (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent > -750))) {		// feedback in h-alpha
+						if(puffing_feedback_mode == 2 && ((inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 950) || (inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent > -750))) {		// feedback in h-alpha
 							if ( inputstruct[0].PuffingOutputWaveform < inputstruct[0].HAlpha) puffing_feedback_usectime_to_change = puffing_feedback_usectime_to_change + puffing_feedback_usec_change_per_cycle;
 							if ( inputstruct[0].PuffingOutputWaveform > inputstruct[0].HAlpha) puffing_feedback_usectime_to_change = puffing_feedback_usectime_to_change - puffing_feedback_usec_change_per_cycle;
 							if ( puffing_feedback_usectime_to_change > maximum_idle_time_in_puffing_feedback_in_us ) puffing_feedback_usectime_to_change = maximum_idle_time_in_puffing_feedback_in_us;
@@ -1105,35 +1125,37 @@ NOT USED FOR NOW      vertical field PS - radial position controller (auto)
 	
 			
 /////////////////////////// Kalman Filtering //////////////////////////
-
-
-if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 750 ) {
+	  
+	
+if (inputstruct[0].PrimaryCurrent > 25 && inputstruct[0].PlasmaCurrent > 950 ) {
 	//
 	
 	if(this->changeDetec == 0){
 		int ivo;
-		ivo = this->Kalman_LQR_var->erase();
+		ivo = this->Kalman_LQR_var->erase(Radial_pos, Vertical_pos);
 		this->changeDetec =1;
 		}
 	
-	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_POS(Radial_pos, Vertical_pos,SendToVer_buff, SendToHor_buff, 1);
-	
+	//this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_POS(Radial_pos, Vertical_pos,SendToVer_buff, SendToHor_buff, 1);
+	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_POS(Radial_pos, Vertical_pos,inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent, 1);
+
 	//this->CentroidPos.Kalman_R=0.05;
 	//this->CentroidPos.Kalman_Z=0.05;
 
 
 
-} else if ( inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -750)  {
+} else if ( inputstruct[0].PrimaryCurrent < -25 && inputstruct[0].PlasmaCurrent < -950)  {
 	//
 	
 	if(this->changeDetec == 0){
 		int ivo;
-		ivo = this->Kalman_LQR_var->erase();
+		ivo = this->Kalman_LQR_var->erase(Radial_pos, Vertical_pos);
 		this->changeDetec =1;
 		}
 	
-	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(Radial_pos, Vertical_pos, SendToVer_buff, SendToHor_buff, 1);
-	
+	this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(Radial_pos, Vertical_pos, inputstruct[0].VerticalCurrent, inputstruct[0].HorizontalCurrent, 1);
+	//this-> CentroidPos= this->Kalman_LQR_var->KALMAN_FILTER_NEG(Radial_pos, Vertical_pos, SendToVer_buff, SendToHor_buff, 1);
+
 	//this->CentroidPos.Kalman_R=0.05;
 	//this->CentroidPos.Kalman_Z=0.05;
 
